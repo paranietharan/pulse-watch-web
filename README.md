@@ -2,17 +2,15 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+Copy the environment template and install dependencies, then run the development server:
 
 ```bash
+cp .env.example .env.local
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
+
+Set `NEXT_PUBLIC_API_BASE_URL` to the API URL reachable by the browser. This value is embedded at build time. If the Next.js server reaches the API at a different address, set `INTERNAL_API_URL` for server-side requests and rewrites; `API_URL` is an alternative fallback for rewrites.
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
