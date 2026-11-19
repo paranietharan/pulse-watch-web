@@ -44,8 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       return false;
     } catch {
-      setToken(null);
-      setUser(null);
+      // Keep the current session through temporary network or service errors.
       return false;
     }
   }, []);
