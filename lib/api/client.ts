@@ -1,4 +1,4 @@
-import { ApiError, AuthResponse } from "@/types/api";
+import type { ApiError, AuthResponse } from "@/types/api";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ||
@@ -65,10 +65,12 @@ export async function performTokenRefresh(): Promise<AuthResponse | null> {
         headers: { "Content-Type": "application/json" },
       });
 
-      if (!res.ok) {
+      if (res.status === 401 || res.status === 403) {
         notifySessionExpired();
         return null;
       }
+
+      if (!res.ok) throw new FetchError(res.status, "Session refresh unavailable");
 
       const data: AuthResponse = await res.json();
       if (data && data.access_token) {
@@ -76,11 +78,7 @@ export async function performTokenRefresh(): Promise<AuthResponse | null> {
         return data;
       }
 
-      notifySessionExpired();
-      return null;
-    } catch {
-      notifySessionExpired();
-      return null;
+      throw new Error("Refresh response is missing an access token");
     } finally {
       refreshPromise = null;
     }
@@ -137,9 +135,6 @@ export async function apiClient<T>(
       }
 
       return retryResponse.json();
-    } else {
-      // Refresh failed (token expired or revoked)
-      notifySessionExpired();
     }
   }
 
