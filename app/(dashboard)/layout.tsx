@@ -12,21 +12,30 @@ export default function DashboardShellLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, refreshUnavailable, refreshSession } = useAuth();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && !isAuthenticated && !refreshUnavailable) {
       router.replace("/login");
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [isLoading, isAuthenticated, refreshUnavailable, router]);
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#07090e]">
         <LoadingSpinner text="Checking session..." />
       </div>
+    );
+  }
+
+  if (!isAuthenticated && refreshUnavailable) {
+    return (
+      <main className="min-h-screen flex flex-col items-center justify-center gap-3">
+        <p role="status">The service is unavailable. Your session will be checked again when you retry.</p>
+        <button type="button" onClick={() => void refreshSession()} className="underline">Retry</button>
+      </main>
     );
   }
 

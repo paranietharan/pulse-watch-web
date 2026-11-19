@@ -9,6 +9,7 @@ interface AuthContextType {
   user: SafeUser | null;
   token: string | null;
   isLoading: boolean;
+  refreshUnavailable: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -23,6 +24,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const [refreshUnavailable, setRefreshUnavailable] = useState(false);
+
   // Clear state when session expires
   useEffect(() => {
     const unsubscribe = onSessionExpired(() => {
@@ -35,6 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshSession = useCallback(async (): Promise<boolean> => {
     try {
       const res = await performTokenRefresh();
+      setRefreshUnavailable(false);
       if (res && res.access_token && res.user) {
         setToken(res.access_token);
         setUser(res.user);
@@ -44,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       return false;
     } catch {
-      // Keep the current session through temporary network or service errors.
+      setRefreshUnavailable(true);
       return false;
     }
   }, []);
@@ -67,6 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const res = await authApi.login({ email, password });
+    setRefreshUnavailable(false);
     setToken(res.access_token);
     setUser(res.user);
     setAccessToken(res.access_token);
@@ -88,6 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         token,
         isLoading,
+        refreshUnavailable,
         isAuthenticated: !!user,
         login,
         logout,
